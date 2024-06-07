@@ -1,48 +1,46 @@
 package org.mudanzasalegre.cabioTurno.config;
 
 import java.io.IOException;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.mudanzasalegre.cabioTurno.model.Notificacion;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Component
 public class NotificationWebSocketHandler extends TextWebSocketHandler {
 
-	private static final CopyOnWriteArraySet<WebSocketSession> sessions = new CopyOnWriteArraySet<>();
+	private final Set<WebSocketSession> sessions = new HashSet<>();
+	private final ObjectMapper objectMapper;
+
+	public NotificationWebSocketHandler(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
+	}
 
 	@Override
-	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-		String username = session.getPrincipal().getName(); // Obtener el nombre de usuario del principal autenticado
-		session.getAttributes().put("username", username); // Guardar el nombre de usuario en los atributos de la sesión
+	public void afterConnectionEstablished(WebSocketSession session) {
 		sessions.add(session);
 	}
 
 	@Override
-	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
 		sessions.remove(session);
 	}
 
-	public void sendNotification(String username, String message) {
-		for (WebSocketSession session : sessions) {
-			String sessionUsername = (String) session.getAttributes().get("username");
-			if (sessionUsername != null && sessionUsername.equals(username)) {
-				try {
-					session.sendMessage(new TextMessage(message));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+	public void sendNotificationToUser(Notificacion notification) {
+		try {
+			String notificationJson = objectMapper.writeValueAsString(notification);
+			for (WebSocketSession session : sessions) {
+				session.sendMessage(new TextMessage(notificationJson));
 			}
+		} catch (IOException e) {
+			throw new RuntimeException("Error converting notification to JSON", e);
 		}
-	}
-
-	@Override
-	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-		// Maneja los mensajes recibidos y envía notificaciones a los clientes
-		// conectados
-		session.sendMessage(new TextMessage("Notificación recibida"));
 	}
 }

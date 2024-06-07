@@ -80,7 +80,7 @@ public class CambioTurnoController {
 			CambioTurno cambioTurnoExistente = cambioTurnoService.buscarPorId(cambioTurno.getId());
 			if (cambioTurnoExistente != null) {
 				solicitante = cambioTurnoExistente.getSolicitante();
-				cambioTurno.setFechaSolicitud(cambioTurnoExistente.getFechaSolicitud()); // Mantener la fecha de solicitud existente
+				cambioTurno.setFechaSolicitud(cambioTurnoExistente.getFechaSolicitud());
 			}
 		} else {
 			solicitante = usuarioActual;
@@ -99,13 +99,14 @@ public class CambioTurnoController {
 			cambioTurno.setEstado("Pendiente");
 		} else if (cambioTurno.getEstado().equals("Aceptado") || cambioTurno.getEstado().equals("Rechazado")) {
 			cambioTurno.setFechaResolucion(LocalDateTime.now());
-			notificacionService.enviarNotificacion("Cambio de Turno", "Tu cambio de turno ha sido ", solicitante,
-					cambioTurno.getId().intValue(), cambioTurno.getEstado().toLowerCase());
+			notificacionService.enviarNotificacion("Cambio de Turno",
+					"Tu cambio de turno ha sido " + cambioTurno.getEstado().toLowerCase(), solicitante, cambioTurno.getId().intValue(),
+					cambioTurno.getEstado().toLowerCase());
 		}
 
 		cambioTurnoService.guardar(cambioTurno);
 
-		// Enviar notificación
+		// Enviar notificación a todos los administradores
 		notificacionService.enviarNotificacionATodosLosAdministradores("Cambio de turno", "Nuevo cambio de turno solicitado",
 				cambioTurno.getId().intValue(), "Pendiente");
 

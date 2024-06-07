@@ -27,44 +27,12 @@
 		};
 
 		notificationSocket.onerror = function (error) {
-			console.log('WebSocket error:', error);
+			console.error('WebSocket error:', error);
 		};
 
 		notificationSocket.onclose = function () {
 			console.log('WebSocket connection closed');
 		};
-
-		// Leer el token CSRF del meta tag
-		const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-		const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-		// Evento para resetear el contador de notificaciones y marcar como leídas
-		document.getElementById('notificationsDropdown').addEventListener('hidden.bs.dropdown', function () {
-			const notificationCount = document.getElementById('notification-count');
-			if (notificationCount) {
-				notificationCount.innerText = '';
-				notificationCount.style.display = 'none';
-			}
-
-			// Lógica para marcar las notificaciones como leídas en el backend
-			fetch('/marcarNotificacionesComoLeidas', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					[csrfHeader]: csrfToken // Incluir el token CSRF en la solicitud
-				},
-				credentials: 'include' // Asegura que las cookies de sesión se envíen con la solicitud
-			}).then(response => {
-				if (response.ok) {
-					console.log('Notificaciones marcadas como leídas');
-				} else {
-					console.log('Error al marcar las notificaciones como leídas');
-					return response.text().then(text => {throw new Error(text);});
-				}
-			}).catch(error => {
-				console.log('Error en la solicitud de marcado como leído:', error);
-			});
-		});
 	</script>
 
 	<script>

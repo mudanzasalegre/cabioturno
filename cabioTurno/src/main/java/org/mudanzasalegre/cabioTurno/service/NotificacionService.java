@@ -28,15 +28,14 @@ public class NotificacionService {
 		notificacion.setTipo(tipo);
 		notificacion.setDescripcion(descripcion);
 		notificacion.setUsuario(usuario);
-		notificacion.setFechaHora(LocalDateTime.now());
-		notificacion.setEstado(estado);
 		notificacion.setReferenciaId(referenciaId);
+		notificacion.setEstado(estado);
+		notificacion.setFechaHora(LocalDateTime.now());
+
 		notificacionRepository.save(notificacion);
 
-		// Enviar notificación a través de WebSocket
-		String message = String.format("{\"tipo\":\"%s\", \"descripcion\":\"%s\", \"estado\":\"%s\", \"referenciaId\":%d}",
-				tipo, descripcion, estado, referenciaId);
-		notificationWebSocketHandler.sendNotification(usuario.getUsername(), message);
+		// Enviar notificación en tiempo real
+		notificationWebSocketHandler.sendNotificationToUser(notificacion);
 	}
 
 	public void enviarNotificacionATodosLosAdministradores(String tipo, String descripcion, Integer referenciaId,
