@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{fragments/head :: commonHead('Inicio de Cambio de Turno App')}"></head>
+<body>
+    <div th:insert="~{fragments/nav :: navbar}"></div>
+    <div class="container mt-5">
+        <h1>Bienvenido a CambioTurno</h1>
+
+        <!-- Mensaje de éxito -->
+        <div th:if="${successMessage}" class="alert alert-success" role="alert">
+            <span th:text="${successMessage}"></span>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+            <span th:text="${errorMessage}"></span>
+        </div>
+    </div>
+    <div th:insert="~{fragments/notificationsScript :: notificationsScript}"></div>
+
+</body>
+</html>
