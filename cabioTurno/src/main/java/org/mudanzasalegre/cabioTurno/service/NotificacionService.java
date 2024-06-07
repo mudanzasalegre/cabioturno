@@ -47,12 +47,12 @@ public class NotificacionService {
 	}
 
 	public List<Notificacion> obtenerNotificaciones(Usuario usuario) {
-		return notificacionRepository.findByUsuarioAndEstado(usuario, "Nueva");
+		return notificacionRepository.findByUsuarioAndEstado(usuario, "Pendiente");
 	}
 
 	public void marcarNotificacionesComoLeidas(String username) {
 		Usuario usuario = usuarioRepository.findByUsername(username);
-		List<Notificacion> notificaciones = notificacionRepository.findByUsuarioAndEstado(usuario, "Nueva");
+		List<Notificacion> notificaciones = notificacionRepository.findByUsuarioAndEstado(usuario, "Pendiente");
 		for (Notificacion notificacion : notificaciones) {
 			notificacion.setEstado("Leída");
 			notificacionRepository.save(notificacion);

@@ -33,8 +33,25 @@
 		notificationSocket.onclose = function () {
 			console.log('WebSocket connection closed');
 		};
-	</script>
 
+		document.getElementById('notificationsDropdown').addEventListener('click', function () {
+			fetch('/marcarNotificacionesComoLeidas', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content')
+				}
+			}).then(response => {
+				if (response.ok) {
+					const notificationCount = document.getElementById('notification-count');
+					if (notificationCount) {
+						notificationCount.innerText = '0';
+						notificationCount.style.display = 'none';
+					}
+				}
+			}).catch(error => console.error('Error marcando notificaciones como leídas:', error));
+		});
+	</script>
 	<script>
 		function confirmDelete(button) {
 			var id = button.getAttribute("data-id");

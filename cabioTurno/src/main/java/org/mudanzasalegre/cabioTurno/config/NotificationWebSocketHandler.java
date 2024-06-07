@@ -1,11 +1,10 @@
 package org.mudanzasalegre.cabioTurno.config;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mudanzasalegre.cabioTurno.model.Notificacion;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -13,11 +12,10 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@Component
 public class NotificationWebSocketHandler extends TextWebSocketHandler {
 
-	private final Set<WebSocketSession> sessions = new HashSet<>();
 	private final ObjectMapper objectMapper;
+	private final List<WebSocketSession> sessions = new ArrayList<>();
 
 	public NotificationWebSocketHandler(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
@@ -34,13 +32,20 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
 	}
 
 	public void sendNotificationToUser(Notificacion notification) {
+		String payload;
 		try {
-			String notificationJson = objectMapper.writeValueAsString(notification);
-			for (WebSocketSession session : sessions) {
-				session.sendMessage(new TextMessage(notificationJson));
-			}
+			payload = objectMapper.writeValueAsString(notification);
 		} catch (IOException e) {
-			throw new RuntimeException("Error converting notification to JSON", e);
+			throw new RuntimeException("Error serializing notification", e);
 		}
+
+		TextMessage message = new TextMessage(payload);
+		sessions.forEach(session -> {
+			try {
+				session.sendMessage(message);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 }

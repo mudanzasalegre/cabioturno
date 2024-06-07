@@ -41,7 +41,7 @@ public class CambioTurnoController {
 	@Autowired
 	private NotificacionService notificacionService;
 
-	// Método para añadir notificaciones y otros atributos comunes al modelo
+//Método para añadir notificaciones y otros atributos comunes al modelo
 	private void addCommonAttributes(Model model, Usuario usuario) {
 		List<String> roles = usuario.getPerfiles().stream().map(perfil -> String.valueOf(perfil.getId()))
 				.collect(Collectors.toList());
@@ -106,7 +106,7 @@ public class CambioTurnoController {
 
 		cambioTurnoService.guardar(cambioTurno);
 
-		// Enviar notificación a todos los administradores
+		// Enviar notificación a todos los administradores solo una vez
 		notificacionService.enviarNotificacionATodosLosAdministradores("Cambio de turno", "Nuevo cambio de turno solicitado",
 				cambioTurno.getId().intValue(), "Pendiente");
 
