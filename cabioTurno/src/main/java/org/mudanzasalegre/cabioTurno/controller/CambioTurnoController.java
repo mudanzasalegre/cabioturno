@@ -154,6 +154,26 @@ public class CambioTurnoController {
 		model.addAttribute("sortDir", sortDir);
 		model.addAttribute("reverseSortDir", sortDir.equals("asc") ? "desc" : "asc");
 
+		// Add pagination range
+		int currentPage = pageCambioTurno.getNumber() + 1;
+		int totalPages = pageCambioTurno.getTotalPages();
+		int startPage = Math.max(1, currentPage - 2);
+		int endPage = Math.min(totalPages, currentPage + 2);
+
+		if (currentPage <= 3) {
+			endPage = Math.min(5, totalPages);
+		} else if (currentPage > totalPages - 3) {
+			startPage = Math.max(1, totalPages - 4);
+		}
+
+		if (totalPages > 1) {
+			model.addAttribute("startPage", startPage);
+			model.addAttribute("endPage", endPage);
+		} else {
+			model.addAttribute("startPage", 1);
+			model.addAttribute("endPage", 1);
+		}
+
 		addCommonAttributes(model, usuario);
 
 		return "cambioTurno/listCambioTurno";
