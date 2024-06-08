@@ -23,6 +23,10 @@ public class NotificacionService {
 	@Autowired
 	private NotificationWebSocketHandler notificationWebSocketHandler;
 
+	public void guardar(Notificacion notificacion) {
+		notificacionRepository.save(notificacion);
+	}
+
 	public void enviarNotificacion(String tipo, String descripcion, Usuario usuario, Integer referenciaId, String estado) {
 		Notificacion notificacion = new Notificacion();
 		notificacion.setTipo(tipo);
@@ -34,8 +38,13 @@ public class NotificacionService {
 
 		notificacionRepository.save(notificacion);
 
-		// Enviar notificación en tiempo real
-		notificationWebSocketHandler.sendNotificationToUser(notificacion);
+		try {
+			// Enviar notificación en tiempo real
+			notificationWebSocketHandler.sendNotificationToUser(notificacion);
+		} catch (Exception e) {
+			e.printStackTrace();
+			// Maneja el error de envío en tiempo real si es necesario
+		}
 	}
 
 	public void enviarNotificacionATodosLosAdministradores(String tipo, String descripcion, Integer referenciaId,
@@ -47,12 +56,12 @@ public class NotificacionService {
 	}
 
 	public List<Notificacion> obtenerNotificaciones(Usuario usuario) {
-		return notificacionRepository.findByUsuarioAndEstado(usuario, "Pendiente");
+		return notificacionRepository.findByUsuarioAndEstado(usuario, "nueva");
 	}
 
 	public void marcarNotificacionesComoLeidas(String username) {
 		Usuario usuario = usuarioRepository.findByUsername(username);
-		List<Notificacion> notificaciones = notificacionRepository.findByUsuarioAndEstado(usuario, "Pendiente");
+		List<Notificacion> notificaciones = notificacionRepository.findByUsuarioAndEstado(usuario, "nueva");
 		for (Notificacion notificacion : notificaciones) {
 			notificacion.setEstado("Leída");
 			notificacionRepository.save(notificacion);

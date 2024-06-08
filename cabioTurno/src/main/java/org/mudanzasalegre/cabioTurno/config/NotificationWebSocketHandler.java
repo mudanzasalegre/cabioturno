@@ -1,8 +1,8 @@
 package org.mudanzasalegre.cabioTurno.config;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.mudanzasalegre.cabioTurno.model.Notificacion;
 import org.springframework.web.socket.CloseStatus;
@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class NotificationWebSocketHandler extends TextWebSocketHandler {
 
 	private final ObjectMapper objectMapper;
-	private final List<WebSocketSession> sessions = new ArrayList<>();
+	private final ConcurrentMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
 	public NotificationWebSocketHandler(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
@@ -23,29 +23,31 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler {
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) {
-		sessions.add(session);
+		String username = (String) session.getAttributes().get("username");
+		if (username != null) {
+			sessions.put(username, session);
+		}
 	}
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-		sessions.remove(session);
+		String username = (String) session.getAttributes().get("username");
+		if (username != null) {
+			sessions.remove(username);
+		}
 	}
 
 	public void sendNotificationToUser(Notificacion notification) {
-		String payload;
-		try {
-			payload = objectMapper.writeValueAsString(notification);
-		} catch (IOException e) {
-			throw new RuntimeException("Error serializing notification", e);
-		}
+		String username = notification.getUsuario().getUsername();
+		WebSocketSession session = sessions.get(username);
 
-		TextMessage message = new TextMessage(payload);
-		sessions.forEach(session -> {
+		if (session != null && session.isOpen()) {
 			try {
-				session.sendMessage(message);
+				String payload = objectMapper.writeValueAsString(notification);
+				session.sendMessage(new TextMessage(payload));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		});
+		}
 	}
 }

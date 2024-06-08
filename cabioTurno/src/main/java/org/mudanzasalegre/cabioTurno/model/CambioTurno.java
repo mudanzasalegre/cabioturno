@@ -34,7 +34,7 @@ public class CambioTurno {
     private String turnoACambiar;
 
     @Column(nullable = false, length = 20)
-    private String estado;
+    private String estado = "Pendiente";  // Ponemos valor por defecto
 
     @Column(name = "fecha_solicitud", nullable = false)
     private LocalDateTime fechaSolicitud;

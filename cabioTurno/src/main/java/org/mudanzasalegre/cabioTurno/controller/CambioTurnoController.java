@@ -41,7 +41,7 @@ public class CambioTurnoController {
 	@Autowired
 	private NotificacionService notificacionService;
 
-//Método para añadir notificaciones y otros atributos comunes al modelo
+	// Método para añadir notificaciones y otros atributos comunes al modelo
 	private void addCommonAttributes(Model model, Usuario usuario) {
 		List<String> roles = usuario.getPerfiles().stream().map(perfil -> String.valueOf(perfil.getId()))
 				.collect(Collectors.toList());
@@ -76,16 +76,21 @@ public class CambioTurnoController {
 		Usuario usuarioActual = usuarioRepository.findByUsername(user.getUsername());
 		Usuario solicitante = null;
 
-		if (cambioTurno.getId() != null) {
+		boolean esNuevo = cambioTurno.getId() == null;
+		String estadoAnterior = null;
+
+		if (!esNuevo) {
 			CambioTurno cambioTurnoExistente = cambioTurnoService.buscarPorId(cambioTurno.getId());
 			if (cambioTurnoExistente != null) {
 				solicitante = cambioTurnoExistente.getSolicitante();
 				cambioTurno.setFechaSolicitud(cambioTurnoExistente.getFechaSolicitud());
+				estadoAnterior = cambioTurnoExistente.getEstado();
 			}
 		} else {
 			solicitante = usuarioActual;
 			cambioTurno.setSolicitante(solicitante);
 			cambioTurno.setFechaSolicitud(LocalDateTime.now());
+			cambioTurno.setEstado("Pendiente"); // Establecer el estado por defecto
 		}
 
 		if (solicitante == null) {
@@ -95,24 +100,40 @@ public class CambioTurnoController {
 			cambioTurno.setSolicitante(solicitante);
 		}
 
-		if (cambioTurno.getEstado() == null || cambioTurno.getEstado().isEmpty()) {
-			cambioTurno.setEstado("Pendiente");
-		} else if (cambioTurno.getEstado().equals("Aceptado") || cambioTurno.getEstado().equals("Rechazado")) {
-			cambioTurno.setFechaResolucion(LocalDateTime.now());
-			notificacionService.enviarNotificacion("Cambio de Turno",
-					"Tu cambio de turno ha sido " + cambioTurno.getEstado().toLowerCase(), solicitante, cambioTurno.getId().intValue(),
-					cambioTurno.getEstado().toLowerCase());
-		}
-
 		cambioTurnoService.guardar(cambioTurno);
 
-		// Enviar notificación a todos los administradores solo una vez
-		notificacionService.enviarNotificacionATodosLosAdministradores("Cambio de turno", "Nuevo cambio de turno solicitado",
-				cambioTurno.getId().intValue(), "Pendiente");
+		try {
+			if (esNuevo) {
+				// Enviar notificaciones a todos los administradores
+				List<Usuario> administradores = usuarioRepository.findAllByPerfilesNombre("Administrador");
+				for (Usuario admin : administradores) {
+					notificacionService.enviarNotificacion("Cambio de Turno",
+							"Nueva solicitud de cambio de turno de " + solicitante.getNombre(), admin, cambioTurno.getId().intValue(),
+							"nueva");
+				}
+			} else if (!estadoAnterior.equals(cambioTurno.getEstado())) {
+				// Enviar notificación al solicitante si el estado cambió
+				notificacionService.enviarNotificacion("Cambio de Turno",
+						"Tu solicitud de cambio de turno ha sido " + cambioTurno.getEstado().toLowerCase(), solicitante,
+						cambioTurno.getId().intValue(), "nueva");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			// Agrega un mensaje de error para la notificación si es necesario
+			redirectAttributes.addFlashAttribute("errorMessage",
+					"Cambio de turno guardado, pero ocurrió un error al enviar las notificaciones.");
+		}
 
-		boolean esAdmin = usuarioActual.getPerfiles().stream().anyMatch(perfil -> perfil.getNombre().equals("Administrador"));
 		redirectAttributes.addFlashAttribute("successMessage", "Cambio de turno guardado exitosamente.");
-		return esAdmin ? "redirect:/cambioTurno/list" : "redirect:/";
+
+		// Verificar si el usuario es un administrador
+		boolean esAdmin = usuarioActual.getPerfiles().stream().anyMatch(perfil -> perfil.getNombre().equals("Administrador"));
+
+		if (esAdmin) {
+			return "redirect:/cambioTurno/list";
+		} else {
+			return "redirect:/";
+		}
 	}
 
 	@GetMapping("/list")
