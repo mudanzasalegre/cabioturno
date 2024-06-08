@@ -1,6 +1,7 @@
 package org.mudanzasalegre.cabioTurno.service;
 
 import org.mudanzasalegre.cabioTurno.model.CambioTurno;
+import org.mudanzasalegre.cabioTurno.model.Usuario;
 import org.mudanzasalegre.cabioTurno.repository.CambioTurnoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,5 +32,10 @@ public class CambioTurnoServiceImpl implements ICambioTurnoService {
     @Override
     public void borrar(Long id) {
         cambioTurnoRepository.deleteById(id);
+    }
+    
+    @Override
+    public Page<CambioTurno> listarPorSolicitante(Usuario solicitante, Pageable pageable) {
+        return cambioTurnoRepository.findBySolicitante(solicitante, pageable);
     }
 }

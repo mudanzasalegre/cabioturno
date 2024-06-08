@@ -14,17 +14,34 @@
 			position: absolute;
 			top: 4px;
 			right: 20px;
-			padding: 2px 2px;
+			padding: 2px 4px;
 			border-radius: 50%;
 			background: red;
 			color: white;
-			font-size: 0.5em;
+			font-size: 0.6em;
 			line-height: 1;
 		}
 		
 		.navbar .nav-link {
 			position: relative;
 			display: inline-block;
+		}
+
+        /* Estilo para el menú desplegable de notificaciones */
+		.dropdown-menu-right {
+			right: 0;
+			left: auto;
+			width: 300px; /* Ajusta el ancho según sea necesario */
+		}
+		
+		.dropdown-item {
+			white-space: normal; /* Permite que las notificaciones usen varias líneas si es necesario */
+			word-wrap: break-word;
+		}
+		
+		#notification-list {
+			max-height: 400px; /* Altura máxima del menú desplegable */
+			overflow-y: auto; /* Agrega una barra de desplazamiento si hay muchas notificaciones */
 		}
 	</style>
 </head>

@@ -53,7 +53,7 @@
 								th:class="${sortField == 'fechaResolucion' ? (sortDir == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : ''}"></i>
 						</a>
 					</th>
-					<th>Acciones</th>
+					<th th:if="${roles.contains('900')}">Acciones</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -66,7 +66,7 @@
 					<td th:text="${cambioTurno.turnoACambiar}">Turno</td>
 					<td th:text="${cambioTurno.estado}">Pendiente</td>
 					<td th:text="${cambioTurno.fechaResolucion}">2023-06-06T16:00</td>
-					<td>
+					<td th:if="${roles.contains('900')}">
 						<a th:href="@{/cambioTurno/edit/{id}(id=${cambioTurno.id})}" class="btn btn-warning btn-sm">
 							<i class="fas fa-edit"></i>
 						</a>
@@ -143,8 +143,6 @@
 	</div>
 
 	<div th:insert="~{fragments/notificationsScript :: notificationsScript}"></div>
-
-
 </body>
 
 </html>

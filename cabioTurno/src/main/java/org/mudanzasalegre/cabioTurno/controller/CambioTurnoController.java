@@ -85,6 +85,13 @@ public class CambioTurnoController {
 				solicitante = cambioTurnoExistente.getSolicitante();
 				cambioTurno.setFechaSolicitud(cambioTurnoExistente.getFechaSolicitud());
 				estadoAnterior = cambioTurnoExistente.getEstado();
+				// Si el estado ha cambiado de 'Pendiente' a otro, establecer la fecha de
+				// resolución
+				if ("Pendiente".equals(estadoAnterior) && !estadoAnterior.equals(cambioTurno.getEstado())) {
+					cambioTurno.setFechaResolucion(LocalDateTime.now());
+				} else {
+					cambioTurno.setFechaResolucion(cambioTurnoExistente.getFechaResolucion());
+				}
 			}
 		} else {
 			solicitante = usuarioActual;
@@ -114,7 +121,7 @@ public class CambioTurnoController {
 			} else if (!estadoAnterior.equals(cambioTurno.getEstado())) {
 				// Enviar notificación al solicitante si el estado cambió
 				notificacionService.enviarNotificacion("Cambio de Turno",
-						"Tu solicitud de cambio de turno ha sido " + cambioTurno.getEstado().toLowerCase(), solicitante,
+						"Solicitud de cambio de turno: " + cambioTurno.getEstado().toLowerCase(), solicitante,
 						cambioTurno.getId().intValue(), "nueva");
 			}
 		} catch (Exception e) {
@@ -139,12 +146,26 @@ public class CambioTurnoController {
 	@GetMapping("/list")
 	public String listarCambiosTurno(Model model, @AuthenticationPrincipal User user,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
-			@RequestParam(defaultValue = "id") String sortField, @RequestParam(defaultValue = "asc") String sortDir) {
+			@RequestParam(defaultValue = "fechaSolicitud") String sortField,
+			@RequestParam(defaultValue = "desc") String sortDir) {
 		Sort sort = Sort.by(sortDir.equals("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortField);
 		Pageable pageable = PageRequest.of(page, size, sort);
-		Page<CambioTurno> pageCambioTurno = cambioTurnoService.listarTodos(pageable);
+		Page<CambioTurno> pageCambioTurno;
 
 		Usuario usuario = usuarioRepository.findByUsername(user.getUsername());
+
+		// Filtrar cambios de turno según el rol del usuario
+		if (usuario.getPerfiles().stream().anyMatch(perfil -> perfil.getNombre().equals("Administrador"))) {
+			// Si el usuario es administrador, ver todos los cambios de turno
+			pageCambioTurno = cambioTurnoService.listarTodos(pageable);
+		} else if (usuario.getPerfiles().stream()
+				.anyMatch(perfil -> perfil.getNombre().equals("Celador") || perfil.getNombre().equals("Operador"))) {
+			// Si el usuario es Celador o Operador, ver solo sus propios cambios de turno
+			pageCambioTurno = cambioTurnoService.listarPorSolicitante(usuario, pageable);
+		} else {
+			// Si el usuario no tiene un rol autorizado, redirigir a la página de inicio
+			return "redirect:/";
+		}
 
 		model.addAttribute("cambiosTurno", pageCambioTurno.getContent());
 		model.addAttribute("currentPage", pageCambioTurno.getNumber());
